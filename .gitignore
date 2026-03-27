@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.mcpb
 .DS_Store
+.dev.vars
+*.env*
