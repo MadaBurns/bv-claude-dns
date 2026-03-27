@@ -1,0 +1,26 @@
+{
+	"name": "bv-claude-dns",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Blackveil DNS Security Scanner — Claude Desktop Extension",
+	"author": "BLACKVEIL Security",
+	"license": "BUSL-1.1",
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"build": "tsup",
+		"dev": "node dist/server.js",
+		"typecheck": "tsc --noEmit",
+		"mcpb:validate": "mcpb validate",
+		"mcpb:pack": "npm run build && mcpb pack",
+		"mcpb:clean": "mcpb clean"
+	},
+	"devDependencies": {
+		"@anthropic-ai/mcpb": "^2.1.2",
+		"@types/node": "^22.0.0",
+		"tsup": "^8.5.0",
+		"typescript": "^5.5.2"
+	}
+}

@@ -1,0 +1,58 @@
+{
+	"manifest_version": "0.3",
+	"name": "blackveil-dns",
+	"version": "1.0.0",
+	"description": "DNS & email security scanner — 33 tools for SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more. Powered by Blackveil Security.",
+	"author": {
+		"name": "BLACKVEIL Security",
+		"url": "https://blackveilsecurity.com"
+	},
+	"license": "BUSL-1.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/MadaBurns/bv-claude-dns"
+	},
+	"icon": "assets/icon-light.png",
+	"tools": [
+		{
+			"name": "scan_domain",
+			"description": "Full DNS and email security audit. Score, grade, maturity, findings."
+		},
+		{
+			"name": "check_spf",
+			"description": "Validate SPF syntax, policy, and trust surface."
+		},
+		{
+			"name": "check_dmarc",
+			"description": "Validate DMARC policy, alignment, and reporting."
+		},
+		{
+			"name": "check_dkim",
+			"description": "Probe DKIM selectors and validate key strength."
+		},
+		{
+			"name": "check_dnssec",
+			"description": "Verify DNSSEC validation and DNSKEY/DS records."
+		}
+	],
+	"user_config": {
+		"bv_api_key": {
+			"title": "API Key",
+			"type": "string",
+			"description": "Your Blackveil API key. Get one at blackveilsecurity.com",
+			"required": false,
+			"sensitive": true
+		}
+	},
+	"server": {
+		"type": "node",
+		"entry_point": "dist/server.js",
+		"mcp_config": {
+			"command": "node",
+			"args": ["dist/server.js"],
+			"env": {
+				"BV_API_KEY": "${user_config.bv_api_key}"
+			}
+		}
+	}
+}

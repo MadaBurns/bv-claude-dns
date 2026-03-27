@@ -1,0 +1,20 @@
+# Source code
+src/
+node_modules/
+*.ts
+!dist/**
+
+# Config
+tsconfig.json
+tsup.config.ts
+.git/
+.github/
+.gitignore
+
+# OS / editor
+.DS_Store
+*.log
+*.map
+
+# Lock files
+package-lock.json
