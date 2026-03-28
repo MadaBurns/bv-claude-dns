@@ -12,7 +12,8 @@ import { request as httpsRequest } from 'node:https';
 
 const MCP_URL = 'https://dns-mcp.blackveilsecurity.com/mcp';
 const API_KEY = process.env.BV_API_KEY ?? '';
-console.error(`[bv-proxy] API_KEY present: ${API_KEY.length > 0}`);
+const MAX_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MB
+const REQUEST_TIMEOUT_MS = 30_000; // 30 seconds
 
 let remoteSessionId: string | undefined;
 let remoteInitialized = false;
@@ -28,10 +29,19 @@ function remoteCall(method: string, params: Record<string, unknown>): Promise<{ 
 		if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
 		if (remoteSessionId) headers['Mcp-Session-Id'] = remoteSessionId;
 
-		const req = httpsRequest(MCP_URL, { method: 'POST', headers }, (res) => {
+		const req = httpsRequest(MCP_URL, { method: 'POST', headers, timeout: REQUEST_TIMEOUT_MS }, (res) => {
 			let data = '';
+			let bytes = 0;
 			res.setEncoding('utf8');
-			res.on('data', (chunk: string) => { data += chunk; });
+			res.on('data', (chunk: string) => {
+				bytes += Buffer.byteLength(chunk);
+				if (bytes > MAX_RESPONSE_BYTES) {
+					res.destroy();
+					reject(new Error('Response exceeded 2 MB limit'));
+					return;
+				}
+				data += chunk;
+			});
 			res.on('end', () => {
 				const sid = res.headers['mcp-session-id'];
 				if (typeof sid === 'string') remoteSessionId = sid;
@@ -39,6 +49,7 @@ function remoteCall(method: string, params: Record<string, unknown>): Promise<{ 
 				catch { reject(new Error(`Invalid JSON: ${data.slice(0, 200)}`)); }
 			});
 		});
+		req.on('timeout', () => { req.destroy(); reject(new Error('Request timed out')); });
 		req.on('error', reject);
 		req.write(body);
 		req.end();
@@ -59,10 +70,11 @@ async function ensureRemoteInit(): Promise<void> {
 		const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 		if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
 		if (remoteSessionId) headers['Mcp-Session-Id'] = remoteSessionId;
-		const req = httpsRequest(MCP_URL, { method: 'POST', headers }, (res) => {
+		const req = httpsRequest(MCP_URL, { method: 'POST', headers, timeout: REQUEST_TIMEOUT_MS }, (res) => {
 			res.resume();
 			res.on('end', () => resolve());
 		});
+		req.on('timeout', () => { req.destroy(); reject(new Error('Request timed out')); });
 		req.on('error', reject);
 		req.write(body);
 		req.end();
