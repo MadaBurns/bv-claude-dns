@@ -1,7 +1,7 @@
 {
 	"manifest_version": "0.3",
 	"name": "blackveil-dns",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "DNS & email security scanner — 33 tools for SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more. Powered by Blackveil Security.",
 	"author": {
 		"name": "BLACKVEIL Security",

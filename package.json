@@ -1,11 +1,19 @@
 {
 	"name": "bv-claude-dns",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"private": true,
 	"type": "module",
 	"description": "Blackveil DNS Security Scanner — Claude Desktop Extension",
 	"author": "BLACKVEIL Security",
 	"license": "BUSL-1.1",
+	"homepage": "https://blackveilsecurity.com",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/MadaBurns/bv-claude-dns"
+	},
+	"bugs": {
+		"url": "https://github.com/MadaBurns/bv-claude-dns/issues"
+	},
 	"engines": {
 		"node": ">=18"
 	},
@@ -14,7 +22,7 @@
 		"dev": "node dist/server.js",
 		"typecheck": "tsc --noEmit",
 		"mcpb:validate": "mcpb validate",
-		"mcpb:pack": "npm run build && mcpb pack",
+		"mcpb:pack": "node scripts/sync-manifest-version.mjs && npm run build && mcpb pack",
 		"mcpb:clean": "mcpb clean"
 	},
 	"dependencies": {
