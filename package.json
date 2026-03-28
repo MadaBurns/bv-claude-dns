@@ -2,8 +2,7 @@
 	"name": "bv-claude-dns",
 	"version": "1.0.0",
 	"private": true,
-	"type": "module",
-	"description": "Blackveil DNS Security Scanner — Claude Desktop Extension",
+"description": "Blackveil DNS Security Scanner — Claude Desktop Extension",
 	"author": "BLACKVEIL Security",
 	"license": "BUSL-1.1",
 	"engines": {

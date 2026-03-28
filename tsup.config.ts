@@ -2,7 +2,8 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
 	entry: { server: 'src/server.ts' },
-	format: ['esm'],
+	format: ['cjs'],
+	outExtension: () => ({ js: '.js' }),
 	target: 'es2022',
 	platform: 'node',
 	sourcemap: false,
