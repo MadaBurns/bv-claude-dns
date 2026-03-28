@@ -2,16 +2,14 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
 	entry: { server: 'src/server.ts' },
-	format: ['cjs'],
-	outExtension: () => ({ js: '.js' }),
+	format: ['esm'],
 	target: 'es2022',
 	platform: 'node',
 	sourcemap: false,
 	splitting: false,
 	treeshake: true,
 	clean: true,
-	// Bundle all deps except node builtins
+	// Bundle ALL deps into single file — no node_modules needed in .mcpb
 	noExternal: [/.*/],
-	external: ['node:https'],
 	banner: { js: '#!/usr/bin/env node' },
 });

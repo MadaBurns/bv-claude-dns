@@ -49,7 +49,7 @@
 		"entry_point": "dist/server.js",
 		"mcp_config": {
 			"command": "node",
-			"args": ["dist/server.js"],
+			"args": ["${__dirname}/dist/server.js"],
 			"env": {
 				"BV_API_KEY": "${user_config.bv_api_key}"
 			}

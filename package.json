@@ -2,7 +2,8 @@
 	"name": "bv-claude-dns",
 	"version": "1.0.0",
 	"private": true,
-"description": "Blackveil DNS Security Scanner — Claude Desktop Extension",
+	"type": "module",
+	"description": "Blackveil DNS Security Scanner — Claude Desktop Extension",
 	"author": "BLACKVEIL Security",
 	"license": "BUSL-1.1",
 	"engines": {
@@ -15,6 +16,9 @@
 		"mcpb:validate": "mcpb validate",
 		"mcpb:pack": "npm run build && mcpb pack",
 		"mcpb:clean": "mcpb clean"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.12.0"
 	},
 	"devDependencies": {
 		"@anthropic-ai/mcpb": "^2.1.2",
