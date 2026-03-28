@@ -11,6 +11,10 @@ tsup.config.ts
 .github/
 .gitignore
 
+# Secrets
+.dev.vars
+*.env*
+
 # OS / editor
 .DS_Store
 *.log
