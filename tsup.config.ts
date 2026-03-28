@@ -9,7 +9,8 @@ export default defineConfig({
 	splitting: false,
 	treeshake: true,
 	clean: true,
-	// Bundle all deps into a single file for MCPB — no node_modules needed
+	// Bundle all deps except node builtins
 	noExternal: [/.*/],
+	external: ['node:https'],
 	banner: { js: '#!/usr/bin/env node' },
 });

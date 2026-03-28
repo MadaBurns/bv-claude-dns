@@ -5,6 +5,7 @@ node_modules/
 !dist/**
 
 # Config
+CLAUDE.md
 tsconfig.json
 tsup.config.ts
 .git/

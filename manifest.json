@@ -12,7 +12,7 @@
 		"type": "git",
 		"url": "https://github.com/MadaBurns/bv-claude-dns"
 	},
-	"icon": "assets/icon-light.png",
+	"icon": "assets/icon.png",
 	"tools": [
 		{
 			"name": "scan_domain",
