@@ -11,7 +11,9 @@ import { z } from 'zod';
 import { request as httpsRequest } from 'node:https';
 
 const MCP_URL = 'https://dns-mcp.blackveilsecurity.com/mcp';
-const API_KEY = process.env.BV_API_KEY ?? '';
+// Ignore unresolved MCPB placeholder or empty values
+const rawKey = process.env.BV_API_KEY ?? '';
+const API_KEY = rawKey.startsWith('${') ? '' : rawKey;
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MB
 const REQUEST_TIMEOUT_MS = 30_000; // 30 seconds
 
