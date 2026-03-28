@@ -1,0 +1,7 @@
+# Baseline CODEOWNERS for bv-claude-dns
+
+* @MadaBurns
+
+src/ @MadaBurns
+.github/workflows/ @MadaBurns
+package.json @MadaBurns

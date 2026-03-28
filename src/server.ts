@@ -12,6 +12,7 @@ import { request as httpsRequest } from 'node:https';
 
 const MCP_URL = 'https://dns-mcp.blackveilsecurity.com/mcp';
 const API_KEY = process.env.BV_API_KEY ?? '';
+console.error(`[bv-proxy] API_KEY present: ${API_KEY.length > 0}`);
 
 let remoteSessionId: string | undefined;
 let remoteInitialized = false;
