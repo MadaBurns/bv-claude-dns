@@ -10,7 +10,9 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { request as httpsRequest } from 'node:https';
 
+const PROXY_VERSION = '1.1.0';
 const MCP_URL = 'https://dns-mcp.blackveilsecurity.com/mcp';
+const USER_AGENT = `bv-claude-dns-proxy/${PROXY_VERSION}`;
 // Ignore unresolved MCPB placeholder or empty values
 const rawKey = process.env.BV_API_KEY ?? '';
 const API_KEY = rawKey.startsWith('${') ? '' : rawKey;
@@ -27,6 +29,7 @@ function remoteCall(method: string, params: Record<string, unknown>): Promise<{ 
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 			Accept: 'application/json',
+			'User-Agent': USER_AGENT,
 		};
 		if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
 		if (remoteSessionId) headers['Mcp-Session-Id'] = remoteSessionId;
@@ -64,7 +67,7 @@ async function ensureRemoteInit(): Promise<void> {
 	await remoteCall('initialize', {
 		protocolVersion: '2025-03-26',
 		capabilities: {},
-		clientInfo: { name: 'bv-claude-dns-proxy', version: '1.0.0' },
+		clientInfo: { name: 'bv-claude-dns-proxy', version: PROXY_VERSION },
 	});
 	// Send initialized notification
 	await new Promise<void>((resolve, reject) => {
@@ -148,7 +151,7 @@ const TOOLS: Array<{ name: string; description: string; params: Record<string, z
 
 const server = new McpServer({
 	name: 'Blackveil DNS',
-	version: '1.0.0',
+	version: PROXY_VERSION,
 });
 
 for (const tool of TOOLS) {
