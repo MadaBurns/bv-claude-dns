@@ -1,0 +1,31 @@
+# Gitleaks configuration for bv-claude-dns
+
+title = "bv-claude-dns secret and PII detection"
+
+[extend]
+useDefault = true
+
+# ─── Custom Rules ─────────��─────────────────────────────────────────
+
+[[rules]]
+id = "internal-org-team"
+description = "Internal GitHub organization team name leaked"
+regex = '''@blackveil-security/'''
+keywords = ["blackveil-security"]
+
+[[rules]]
+id = "cloudflare-account-id"
+description = "Cloudflare Account ID (32-char hex)"
+regex = '''(?i)(?:account[_\-]?id|CLOUDFLARE_ACCOUNT)\s*[=:]\s*["']?([0-9a-f]{32})["']?'''
+keywords = ["account"]
+
+# ─── Global Allowlists ──────────────���───────────────────────────────
+
+[allowlist]
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''\.githooks/''',
+  '''node_modules/''',
+  '''package-lock\.json$''',
+  '''dist/''',
+]

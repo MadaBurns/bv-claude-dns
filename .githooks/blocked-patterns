@@ -1,0 +1,3 @@
+# Internal organization leakage patterns for pre-commit hook
+# Each line is an extended regex. Lines starting with # are ignored.
+@blackveil-security/
