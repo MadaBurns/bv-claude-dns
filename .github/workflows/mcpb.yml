@@ -24,7 +24,12 @@ jobs:
           name: blackveil-dns-mcpb
           path: '*.mcpb'
 
+      - name: Generate SHA256SUMS
+        run: shasum -a 256 *.mcpb > SHA256SUMS.txt
+
       - uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: '*.mcpb'
+          files: |
+            *.mcpb
+            SHA256SUMS.txt
