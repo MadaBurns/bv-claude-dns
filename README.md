@@ -1,6 +1,6 @@
 # Blackveil DNS Security Scanner
 
-A Claude Desktop Extension (MCP) that brings 33 DNS and email security tools directly into Claude — SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more.
+A Claude Desktop Extension (MCP) that brings 51 DNS and email security tools directly into Claude — SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more.
 
 ![Blackveil DNS](assets/icon.png)
 
@@ -23,32 +23,50 @@ Download the latest `.mcpb` file from [GitHub Releases](https://github.com/MadaB
 | `check_dmarc` | Validate DMARC policy, alignment, and reporting |
 | `check_dkim` | Probe DKIM selectors and validate key strength |
 | `check_dnssec` | Verify DNSSEC validation and DNSKEY/DS records |
-| `check_mx` | Inspect MX records and mail server configuration |
-| `check_mx_reputation` | Assess mail server reputation |
-| `check_ns` | Validate nameserver configuration |
-| `check_ssl` | Check SSL/TLS certificate status and configuration |
-| `check_caa` | Verify CAA (Certificate Authority Authorization) records |
-| `check_dane` | Check DANE/TLSA records for SMTP |
-| `check_dane_https` | Check DANE/TLSA records for HTTPS |
-| `check_mta_sts` | Validate MTA-STS policy and configuration |
-| `check_tlsrpt` | Check TLS-RPT reporting configuration |
-| `check_bimi` | Validate BIMI (Brand Indicators for Message Identification) |
-| `check_srv` | Inspect SRV records |
-| `check_svcb_https` | Check SVCB/HTTPS DNS records |
-| `check_txt_hygiene` | Audit TXT record hygiene |
-| `check_zone_hygiene` | Audit DNS zone hygiene |
-| `check_http_security` | Check HTTP security headers |
-| `check_resolver_consistency` | Test resolver consistency across providers |
-| `check_lookalikes` | Detect lookalike/typosquat domains |
-| `check_shadow_domains` | Scan for shadow/subdomain takeover risks |
-| `assess_spoofability` | Assess email spoofability risk |
+| `check_mx` | Validate MX records and email provider detection |
+| `check_ssl` | Verify SSL/TLS certificate and HTTPS config |
+| `check_mta_sts` | Validate MTA-STS SMTP encryption policy |
+| `check_ns` | Analyze NS delegation and provider diversity |
+| `check_caa` | Check authorized Certificate Authorities via CAA |
+| `check_bimi` | Validate BIMI record and VMC evidence |
+| `check_tlsrpt` | Validate TLS-RPT SMTP failure reporting |
+| `check_http_security` | Audit HTTP security headers (CSP, COOP, etc.) |
+| `check_dane` | Verify DANE/TLSA certificate pinning |
+| `check_dane_https` | Verify DANE certificate pinning for HTTPS |
+| `check_svcb_https` | Validate HTTPS/SVCB records (RFC 9460) |
+| `check_lookalikes` | Detect active typosquat/lookalike domains |
+| `check_shadow_domains` | Detect shadow/subdomain takeover risks |
+| `check_subdomailing` | Detect SubdoMailing risk via SPF include chain |
+| `check_txt_hygiene` | Audit TXT record hygiene and accumulation |
+| `check_mx_reputation` | Check MX server IP reputation via DNSBLs |
+| `check_srv` | Discover SRV records for common services |
+| `check_zone_hygiene` | Audit DNS zone configuration hygiene |
+| `check_resolver_consistency` | Compare DNS responses across resolvers |
+| `check_dbl` | Check domain reputation against Domain Block Lists |
+| `check_rbl` | Check MX server IP reputation against Blocklists |
+| `check_nsec_walkability` | Assess DNSSEC zone walkability risk |
+| `check_dnssec_chain` | Walk the DNSSEC chain of trust from root |
+| `check_fast_flux` | Detect fast-flux DNS behavior |
+| `cymru_asn` | Map domain IPs to ASNs via Team Cymru DNS |
+| `rdap_lookup` | Fetch domain registration data via RDAP |
+| `assess_spoofability` | Assess email spoofing risk for a domain |
 | `explain_finding` | Get remediation guidance for a specific finding |
 | `compare_baseline` | Compare domain config against a security baseline |
+| `compare_domains` | Side-by-side security comparison of 2-5 domains |
+| `batch_scan` | Scan up to 10 domains at once |
+| `map_supply_chain` | Map third-party service dependencies from DNS |
+| `analyze_drift` | Compare current posture against a previous baseline |
+| `resolve_spf_chain` | Trace the full SPF include chain |
+| `discover_subdomains` | Find subdomains via Certificate Transparency logs |
+| `map_compliance` | Map findings to NIST, PCI DSS, SOC 2, CIS Controls |
+| `simulate_attack_paths` | Enumerate attack paths with severity and mitigations |
+| `generate_fix_plan` | Generate a prioritized remediation plan |
 | `generate_spf_record` | Generate a recommended SPF record |
 | `generate_dmarc_record` | Generate a recommended DMARC record |
 | `generate_dkim_config` | Generate DKIM configuration guidance |
 | `generate_mta_sts_policy` | Generate an MTA-STS policy |
-| `generate_fix_plan` | Generate a prioritized remediation plan |
+| `generate_rollout_plan` | Generate a phased DMARC enforcement timeline |
+| `validate_fix` | Re-check a control after applying a fix |
 | `get_benchmark` | Get industry benchmark data |
 | `get_provider_insights` | Get provider-specific security insights |
 
@@ -58,6 +76,7 @@ Download the latest `.mcpb` file from [GitHub Releases](https://github.com/MadaB
 npm ci                 # Install dependencies
 npm run build          # Bundle to dist/server.js
 npm run dev            # Run the proxy locally
+npm test               # Run tests
 npm run typecheck      # TypeScript type check
 npm run mcpb:validate  # Validate manifest
 npm run mcpb:pack      # Build + pack .mcpb extension
@@ -72,14 +91,15 @@ The extension is a thin stdio-to-HTTP proxy. It reads JSON-RPC requests from std
 Tag a version to trigger the CI pipeline:
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+git tag v2.9.1
+git push origin v2.9.1
 ```
 
 GitHub Actions will build the `.mcpb` file and publish it to Releases.
 
-## License
+## Legal
 
-[BUSL-1.1](LICENSE) — converts to Apache 2.0 four years after publication.
+- [Privacy Policy](https://www.blackveilsecurity.com/privacy)
+- [License](LICENSE) — BUSL-1.1, converts to Apache 2.0 four years after publication
 
 (c) 2025 BLACKVEIL Security
