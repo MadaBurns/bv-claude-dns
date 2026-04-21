@@ -70,6 +70,24 @@ Download the latest `.mcpb` file from [GitHub Releases](https://github.com/MadaB
 | `get_benchmark` | Get industry benchmark data |
 | `get_provider_insights` | Get provider-specific security insights |
 
+## Example prompts
+
+Try these with the Blackveil DNS extension enabled in Claude Desktop:
+
+| Prompt | What it does |
+|--------|-------------|
+| `Scan blackveilsecurity.com and tell me what needs fixing` | Full security audit — score, grade, prioritized findings |
+| `Compare the email security of google.com and microsoft.com` | Side-by-side comparison of two domains' postures |
+| `Generate a DMARC record for example.com with reject policy` | Produces a ready-to-publish DNS record |
+| `What attack paths exist for example.com?` | Enumerates spoofing, takeover, and hijack vectors |
+| `Map example.com's compliance against NIST 800-177` | Maps findings to compliance framework controls |
+
+## Support
+
+- **Bug reports & feature requests:** [GitHub Issues](https://github.com/MadaBurns/bv-claude-dns/issues)
+- **Security vulnerabilities:** [security@blackveilsecurity.com](mailto:security@blackveilsecurity.com)
+- **Upstream MCP server:** [MadaBurns/bv-mcp](https://github.com/MadaBurns/bv-mcp/issues)
+
 ## Development
 
 ```bash
