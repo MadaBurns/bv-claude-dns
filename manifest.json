@@ -1,8 +1,8 @@
 {
 	"manifest_version": "0.3",
 	"name": "blackveil-dns",
-	"version": "1.1.0",
-	"description": "DNS & email security scanner — 33 tools for SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more. Powered by Blackveil Security.",
+	"version": "2.9.1",
+	"description": "DNS & email security scanner — 51 tools for SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more. Powered by Blackveil Security.",
 	"author": {
 		"name": "BLACKVEIL Security",
 		"url": "https://blackveilsecurity.com"
@@ -12,28 +12,60 @@
 		"type": "git",
 		"url": "https://github.com/MadaBurns/bv-claude-dns"
 	},
+	"privacy_policy": "https://www.blackveilsecurity.com/privacy",
 	"icon": "assets/icon.png",
 	"tools": [
-		{
-			"name": "scan_domain",
-			"description": "Full DNS and email security audit. Score, grade, maturity, findings."
-		},
-		{
-			"name": "check_spf",
-			"description": "Validate SPF syntax, policy, and trust surface."
-		},
-		{
-			"name": "check_dmarc",
-			"description": "Validate DMARC policy, alignment, and reporting."
-		},
-		{
-			"name": "check_dkim",
-			"description": "Probe DKIM selectors and validate key strength."
-		},
-		{
-			"name": "check_dnssec",
-			"description": "Verify DNSSEC validation and DNSKEY/DS records."
-		}
+		{ "name": "scan_domain", "description": "Full DNS and email security audit. Score, grade, maturity, findings." },
+		{ "name": "check_spf", "description": "Validate SPF syntax, policy, and trust surface." },
+		{ "name": "check_dmarc", "description": "Validate DMARC policy, alignment, and reporting." },
+		{ "name": "check_dkim", "description": "Probe DKIM selectors and validate key strength." },
+		{ "name": "check_dnssec", "description": "Verify DNSSEC validation and DNSKEY/DS records." },
+		{ "name": "check_mx", "description": "Validate MX records and email provider detection." },
+		{ "name": "check_ssl", "description": "Verify SSL/TLS certificate and HTTPS config." },
+		{ "name": "check_mta_sts", "description": "Validate MTA-STS SMTP encryption policy." },
+		{ "name": "check_ns", "description": "Analyze NS delegation and provider diversity." },
+		{ "name": "check_caa", "description": "Check authorized Certificate Authorities via CAA." },
+		{ "name": "check_bimi", "description": "Validate BIMI record and VMC evidence." },
+		{ "name": "check_tlsrpt", "description": "Validate TLS-RPT SMTP failure reporting." },
+		{ "name": "check_http_security", "description": "Audit HTTP security headers (CSP, COOP, etc.)." },
+		{ "name": "check_dane", "description": "Verify DANE/TLSA certificate pinning." },
+		{ "name": "check_dane_https", "description": "Verify DANE certificate pinning for HTTPS." },
+		{ "name": "check_svcb_https", "description": "Validate HTTPS/SVCB records (RFC 9460)." },
+		{ "name": "check_lookalikes", "description": "Detect active typosquat/lookalike domains." },
+		{ "name": "check_shadow_domains", "description": "Detect shadow/subdomain takeover risks." },
+		{ "name": "check_txt_hygiene", "description": "Audit TXT record hygiene and accumulation." },
+		{ "name": "check_mx_reputation", "description": "Check MX server IP reputation via DNSBLs." },
+		{ "name": "check_srv", "description": "Discover SRV records for common services." },
+		{ "name": "check_zone_hygiene", "description": "Audit DNS zone configuration hygiene." },
+		{ "name": "check_resolver_consistency", "description": "Compare DNS responses across resolvers." },
+		{ "name": "assess_spoofability", "description": "Assess email spoofing risk for a domain." },
+		{ "name": "compare_baseline", "description": "Compare domain security against a policy baseline." },
+		{ "name": "generate_fix_plan", "description": "Generate a prioritized remediation plan." },
+		{ "name": "generate_spf_record", "description": "Generate an SPF record for a domain." },
+		{ "name": "generate_dmarc_record", "description": "Generate a DMARC record for a domain." },
+		{ "name": "generate_dkim_config", "description": "Generate DKIM configuration guidance." },
+		{ "name": "generate_mta_sts_policy", "description": "Generate an MTA-STS policy for a domain." },
+		{ "name": "get_benchmark", "description": "Get score benchmarks: percentiles, mean, top failures." },
+		{ "name": "get_provider_insights", "description": "Get provider cohort benchmarks and common issues." },
+		{ "name": "explain_finding", "description": "Explain a specific security finding in detail." },
+		{ "name": "check_subdomailing", "description": "Detect SubdoMailing risk via SPF include chain analysis." },
+		{ "name": "batch_scan", "description": "Scan up to 10 domains at once." },
+		{ "name": "compare_domains", "description": "Side-by-side security comparison of 2-5 domains." },
+		{ "name": "map_supply_chain", "description": "Map third-party service dependencies from DNS records." },
+		{ "name": "analyze_drift", "description": "Compare current posture against a previous baseline." },
+		{ "name": "validate_fix", "description": "Re-check a control after applying a fix." },
+		{ "name": "generate_rollout_plan", "description": "Generate a phased DMARC enforcement timeline." },
+		{ "name": "resolve_spf_chain", "description": "Trace the full SPF include chain for a domain." },
+		{ "name": "discover_subdomains", "description": "Find subdomains via Certificate Transparency logs." },
+		{ "name": "map_compliance", "description": "Map findings to NIST, PCI DSS, SOC 2, CIS Controls." },
+		{ "name": "simulate_attack_paths", "description": "Enumerate attack paths with severity and mitigations." },
+		{ "name": "check_dbl", "description": "Check domain reputation against Domain Block Lists." },
+		{ "name": "check_rbl", "description": "Check MX server IP reputation against Blocklists." },
+		{ "name": "cymru_asn", "description": "Map domain IPs to ASNs via Team Cymru DNS." },
+		{ "name": "rdap_lookup", "description": "Fetch domain registration data via RDAP." },
+		{ "name": "check_nsec_walkability", "description": "Assess DNSSEC zone walkability risk." },
+		{ "name": "check_dnssec_chain", "description": "Walk the DNSSEC chain of trust from root." },
+		{ "name": "check_fast_flux", "description": "Detect fast-flux DNS behavior." }
 	],
 	"user_config": {
 		"bv_api_key": {
@@ -49,7 +81,9 @@
 		"entry_point": "dist/server.js",
 		"mcp_config": {
 			"command": "node",
-			"args": ["${__dirname}/dist/server.js"],
+			"args": [
+				"${__dirname}/dist/server.js"
+			],
 			"env": {
 				"BV_API_KEY": "${user_config.bv_api_key}"
 			}
