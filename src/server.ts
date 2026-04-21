@@ -9,13 +9,24 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { request as httpsRequest } from 'node:https';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 
-const PROXY_VERSION = '1.1.0';
+const PROXY_VERSION = '2.9.1';
 const MCP_URL = 'https://dns-mcp.blackveilsecurity.com/mcp';
 const USER_AGENT = `bv-claude-dns-proxy/${PROXY_VERSION}`;
-// Ignore unresolved MCPB placeholder or empty values
+// Ignore unresolved MCPB placeholder, encrypted blobs, or empty values
 const rawKey = process.env.BV_API_KEY ?? '';
-const API_KEY = rawKey.startsWith('${') ? '' : rawKey;
+let API_KEY = (rawKey.startsWith('${') || rawKey.startsWith('__encrypted__')) ? '' : rawKey;
+
+if (!API_KEY) {
+	try {
+		API_KEY = readFileSync(join(homedir(), '.bv-dns', 'api-key'), 'utf-8').trim();
+	} catch {
+		// No local key file — continue unauthenticated (free tier)
+	}
+}
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MB
 const REQUEST_TIMEOUT_MS = 30_000; // 30 seconds
 
@@ -143,6 +154,24 @@ const TOOLS: Array<{ name: string; description: string; params: Record<string, z
 	{ name: 'get_benchmark', description: 'Get score benchmarks: percentiles, mean, top failures.', params: { profile: z.enum(['mail_enabled', 'enterprise_mail', 'non_mail', 'web_only', 'minimal']).optional().describe('Profile to benchmark (default "mail_enabled").'), format: z.enum(['full', 'compact']).optional() } },
 	{ name: 'get_provider_insights', description: 'Get provider cohort benchmarks and common issues.', params: { provider: z.string().min(1).describe('Provider (e.g., "google workspace").'), profile: z.enum(['mail_enabled', 'enterprise_mail', 'non_mail', 'web_only', 'minimal']).optional(), format: z.enum(['full', 'compact']).optional() } },
 	{ name: 'explain_finding', description: 'Explain a specific security finding in detail.', params: { checkType: z.string().min(1).max(100).describe("Check type (e.g., 'SPF', 'DMARC')."), status: z.enum(['critical', 'high', 'medium', 'low', 'info', 'passed']).describe('Finding severity or status.'), details: z.string().max(2000).optional().describe('Additional detail from check result.'), format: z.enum(['full', 'compact']).optional() } },
+	{ name: 'check_subdomailing', description: 'Detect SubdoMailing risk by analyzing SPF include chain for takeover-vulnerable domains.', params: DOMAIN_OPTIONAL },
+	{ name: 'batch_scan', description: 'Scan up to 10 domains at once. Returns score, grade, and finding counts per domain.', params: { domains: z.array(z.string()).min(1).max(10).describe('Domains to scan (max 10)'), force_refresh: z.boolean().optional().describe('Bypass cache and run fresh scans.'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
+	{ name: 'compare_domains', description: 'Side-by-side security comparison of 2-5 domains. Shows scores, category gaps, and unique weaknesses.', params: { domains: z.array(z.string()).min(2).max(5).describe('Domains to compare (2-5)'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
+	{ name: 'map_supply_chain', description: 'Map third-party service dependencies from DNS records.', params: DOMAIN_OPTIONAL },
+	{ name: 'analyze_drift', description: 'Compare current security posture against a previous baseline.', params: { domain: z.string().describe('Domain to analyze drift for'), baseline: z.string().min(1).max(50_000).describe('Previous ScanScore JSON or "cached"'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
+	{ name: 'validate_fix', description: 'Re-check a specific control after applying a fix.', params: { domain: z.string().describe('Domain to validate the fix for'), check: z.string().describe('Check name to re-run (e.g., "dmarc", "spf")'), expected: z.string().max(1000).optional().describe('Expected DNS record value to verify against'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
+	{ name: 'generate_rollout_plan', description: 'Generate a phased DMARC enforcement timeline with exact DNS records per phase.', params: { domain: z.string().describe('Domain to generate rollout plan for'), target_policy: z.enum(['quarantine', 'reject']).optional().describe('Target DMARC policy (default: reject)'), timeline: z.enum(['aggressive', 'standard', 'conservative']).optional().describe('Rollout speed (default: standard)'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
+	{ name: 'resolve_spf_chain', description: 'Trace the full SPF include chain. Shows lookup count, tree depth, and circular includes.', params: DOMAIN_OPTIONAL },
+	{ name: 'discover_subdomains', description: 'Find subdomains via Certificate Transparency logs.', params: DOMAIN_OPTIONAL },
+	{ name: 'map_compliance', description: 'Map findings to NIST 800-177, PCI DSS 4.0, SOC 2, CIS Controls.', params: DOMAIN_OPTIONAL },
+	{ name: 'simulate_attack_paths', description: 'Enumerate attack paths with severity, feasibility, steps, and mitigations.', params: DOMAIN_OPTIONAL },
+	{ name: 'check_dbl', description: 'Check domain reputation against DNS-based Domain Block Lists.', params: DOMAIN_OPTIONAL },
+	{ name: 'check_rbl', description: 'Check MX server IP reputation against Real-time Blocklists.', params: DOMAIN_OPTIONAL },
+	{ name: 'cymru_asn', description: 'Map domain IPs to ASNs via Team Cymru DNS.', params: DOMAIN_OPTIONAL },
+	{ name: 'rdap_lookup', description: 'Fetch domain registration data via RDAP (modern WHOIS).', params: DOMAIN_OPTIONAL },
+	{ name: 'check_nsec_walkability', description: 'Assess DNSSEC zone walkability risk via NSEC3PARAM analysis.', params: DOMAIN_OPTIONAL },
+	{ name: 'check_dnssec_chain', description: 'Walk the DNSSEC chain of trust from root to target domain.', params: DOMAIN_OPTIONAL },
+	{ name: 'check_fast_flux', description: 'Detect fast-flux DNS behavior via multi-round A/AAAA queries.', params: { domain: z.string().describe('Domain to check (e.g., example.com)'), rounds: z.number().int().min(3).max(5).optional().describe('Number of query rounds (3-5, default 3)'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
 ];
 
 // ---------------------------------------------------------------------------
