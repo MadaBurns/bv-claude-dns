@@ -12,7 +12,6 @@
 		"type": "git",
 		"url": "https://github.com/MadaBurns/bv-claude-dns"
 	},
-	"privacy_policy": "https://www.blackveilsecurity.com/privacy",
 	"icon": "assets/icon.png",
 	"tools": [
 		{ "name": "scan_domain", "description": "Full DNS and email security audit. Score, grade, maturity, findings." },
