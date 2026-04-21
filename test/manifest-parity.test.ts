@@ -11,7 +11,7 @@ function getManifestTools(): string[] {
 
 function getRuntimeTools(): string[] {
   const src = readFileSync(join(ROOT, 'src/server.ts'), 'utf-8');
-  const matches = src.matchAll(/\{\s*name:\s*'([^']+)'/g);
+  const matches = src.matchAll(/\{\s*name:\s*'([^']+)',\s*description:/g);
   return [...matches].map((m) => m[1]).sort();
 }
 
