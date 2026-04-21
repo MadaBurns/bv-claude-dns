@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blackveil DNS — Claude Directory &amp; MCP Registry Submission Guide</title>
+<style>
+  :root {
+    --bg: #000000;
+    --surface: #1a1a1a;
+    --elevated: #1f1f1f;
+    --border: #404040;
+    --mint: #00FF94;
+    --text: #ffffff;
+    --text-dim: #a0a0a0;
+    --warn: #f5b544;
+    --info: #5cb8f0;
+    --fail: #e74c3c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+    color: var(--mint);
+  }
+  h1 span { color: var(--text); }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+    margin: 2rem 0 1rem;
+    color: var(--mint);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  h2 .num {
+    background: var(--mint);
+    color: var(--bg);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card-warn {
+    border-color: var(--warn);
+    background: rgba(245, 181, 68, 0.05);
+  }
+  .card-info {
+    border-color: var(--info);
+    background: rgba(92, 184, 240, 0.05);
+  }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+    margin-top: 0.75rem;
+  }
+  label:first-child { margin-top: 0; }
+  .value {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--elevated);
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    display: block;
+    word-break: break-all;
+    cursor: pointer;
+    position: relative;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .value:hover { border-color: var(--mint); }
+  .value:active::after {
+    content: 'Copied';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: var(--mint);
+  }
+  a {
+    color: var(--info);
+    text-decoration: none;
+  }
+  a:hover { text-decoration: underline; }
+  .link-btn {
+    display: inline-block;
+    background: var(--mint);
+    color: var(--bg);
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .link-btn:hover { opacity: 0.85; text-decoration: none; }
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type="checkbox"] {
+    accent-color: var(--mint);
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  code {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    background: var(--elevated);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+  }
+  pre {
+    background: var(--elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  th {
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .status-done { color: var(--mint); font-weight: 600; }
+  .status-pending { color: var(--warn); font-weight: 600; }
+  .status-manual { color: var(--info); font-weight: 600; }
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+  .footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+</style>
+<script>
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('value')) {
+      navigator.clipboard.writeText(e.target.textContent.trim());
+    }
+  });
+</script>
+</head>
+<body>
+
+<h1><span>BLACK</span>V<span>EIL DNS</span></h1>
+<p class="subtitle">Claude Directory &amp; MCP Registry Submission Guide &mdash; v2.9.1 &mdash; 2026-04-21</p>
+
+<div class="card card-info">
+  <strong>Implementation status:</strong> All code changes are pushed and tested. The <code>v2.9.1</code> tag is live and GitHub Actions is building the <code>.mcpb</code> release. The steps below are manual actions that cannot be automated.
+</div>
+
+<table>
+  <tr><th>Component</th><th>Status</th><th>Detail</th></tr>
+  <tr><td>bv-claude-dns code</td><td class="status-done">DONE</td><td>51 tools, drift tests, CHANGELOG, README</td></tr>
+  <tr><td>bv-mcp code</td><td class="status-done">DONE</td><td>Tool count guard, CI auto-publish, privacy link</td></tr>
+  <tr><td>v2.9.1 tag pushed</td><td class="status-done">DONE</td><td>GitHub Actions building .mcpb</td></tr>
+  <tr><td>GitHub Release</td><td class="status-pending">VERIFY</td><td>Check Actions completed</td></tr>
+  <tr><td>MCP Registry</td><td class="status-manual">MANUAL</td><td>Steps 1-3 below</td></tr>
+  <tr><td>Claude Directory</td><td class="status-manual">MANUAL</td><td>Steps 4-5 below</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- STEP 1 -->
+<h2><span class="num">1</span> Verify the GitHub Release</h2>
+<div class="card">
+  <p>Confirm GitHub Actions built and published the <code>.mcpb</code> successfully.</p>
+  <a class="link-btn" href="https://github.com/MadaBurns/bv-claude-dns/releases/tag/v2.9.1" target="_blank">View Release v2.9.1</a>
+  <label>Expected assets</label>
+  <ul class="checklist">
+    <li><input type="checkbox"> <code>blackveil-dns-2.9.1.mcpb</code> (~168 KB)</li>
+    <li><input type="checkbox"> <code>SHA256SUMS.txt</code></li>
+  </ul>
+</div>
+
+<!-- STEP 2 -->
+<h2><span class="num">2</span> Register on MCP Registry</h2>
+<div class="card">
+  <p>The open MCP Registry gets Blackveil DNS visible in VS Code Copilot, Cursor, Windsurf, and other MCP clients.</p>
+  <a class="link-btn" href="https://registry.modelcontextprotocol.io" target="_blank">Open MCP Registry</a>
+  <ul class="checklist">
+    <li><input type="checkbox"> Sign up / log in</li>
+    <li><input type="checkbox"> Start domain verification for <code>blackveilsecurity.com</code></li>
+    <li><input type="checkbox"> Copy the TXT record value provided</li>
+  </ul>
+
+  <label style="margin-top: 1.25rem">DNS TXT Record (Cloudflare Dashboard)</label>
+  <table>
+    <tr><th>Type</th><th>Name</th><th>Value</th></tr>
+    <tr>
+      <td><code>TXT</code></td>
+      <td><code>_mcp-verify</code></td>
+      <td><em>(paste value from registry)</em></td>
+    </tr>
+  </table>
+
+  <a class="link-btn" href="https://dash.cloudflare.com" target="_blank" style="margin-top: 0.75rem">Open Cloudflare Dashboard</a>
+
+  <ul class="checklist" style="margin-top: 1rem">
+    <li><input type="checkbox"> Add DNS TXT record in Cloudflare</li>
+    <li><input type="checkbox"> Wait ~5 minutes for propagation</li>
+    <li><input type="checkbox"> Complete verification in MCP Registry</li>
+  </ul>
+</div>
+
+<!-- STEP 3 -->
+<h2><span class="num">3</span> Initial MCP Registry Publish + GitHub Secret</h2>
+<div class="card">
+  <p>First publish is manual. Subsequent publishes happen automatically via bv-mcp CI on every <code>v*</code> tag.</p>
+
+  <label>Run locally</label>
+  <pre>cd /Applications/Github/bv-mcp && npx mcp-publisher publish</pre>
+
+  <label>Then add the token to GitHub</label>
+  <ul class="checklist">
+    <li><input type="checkbox"> Go to <a href="https://github.com/MadaBurns/bv-mcp/settings/secrets/actions" target="_blank">bv-mcp &rarr; Settings &rarr; Secrets &rarr; Actions</a></li>
+    <li><input type="checkbox"> Add secret: <code>MCP_REGISTRY_TOKEN</code> = <em>(token from registry account)</em></li>
+  </ul>
+</div>
+
+<!-- STEP 4 -->
+<h2><span class="num">4</span> Submit Remote Connector to Claude Directory</h2>
+<div class="card">
+  <p>This lists the hosted MCP server as a one-click-enable integration in Claude web &amp; desktop.</p>
+  <a class="link-btn" href="https://clau.de/mcp-directory-submission" target="_blank">Open Submission Form</a>
+
+  <label>Server URL</label>
+  <div class="value">https://dns-mcp.blackveilsecurity.com/mcp</div>
+
+  <label>Name</label>
+  <div class="value">Blackveil DNS</div>
+
+  <label>Description</label>
+  <div class="value">DNS &amp; email security scanner &mdash; 51 tools for SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more. Passive, read-only checks powered by Cloudflare DNS-over-HTTPS.</div>
+
+  <label>Icon</label>
+  <p style="font-size: 0.9rem; margin-top: 0.25rem">Upload <code>assets/icon.png</code> from bv-claude-dns (512&times;512 PNG, 23 KB)</p>
+
+  <label>Privacy Policy</label>
+  <div class="value">https://www.blackveilsecurity.com/privacy</div>
+
+  <label>Authentication</label>
+  <div class="value">OAuth 2.1 with PKCE (optional &mdash; free tier works without authentication)</div>
+
+  <label>OAuth Discovery</label>
+  <div class="value">https://dns-mcp.blackveilsecurity.com/.well-known/oauth-authorization-server</div>
+
+  <label>Test Credentials</label>
+  <p style="font-size: 0.9rem; margin-top: 0.25rem">None needed &mdash; free tier requires no API key. Reviewer can run <code>scan_domain</code> with any domain immediately.</p>
+
+  <label>Documentation</label>
+  <div class="value">https://github.com/MadaBurns/bv-mcp</div>
+
+  <label>Transport</label>
+  <div class="value">Streamable HTTP (POST/GET/DELETE /mcp) + Legacy SSE fallback</div>
+
+  <label>Tool Annotations</label>
+  <p style="font-size: 0.9rem; margin-top: 0.25rem">All 51 tools annotated: <code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>idempotentHint: true</code>, <code>openWorldHint: true</code></p>
+</div>
+
+<!-- STEP 5 -->
+<h2><span class="num">5</span> Submit Desktop Extension to Claude Directory</h2>
+<div class="card">
+  <p>This lists the <code>.mcpb</code> local extension for users who prefer a local install.</p>
+  <a class="link-btn" href="https://clau.de/desktop-extention-submission" target="_blank">Open Submission Form</a>
+
+  <label>Extension Download URL</label>
+  <div class="value">https://github.com/MadaBurns/bv-claude-dns/releases/latest/download/bv-claude-dns.mcpb</div>
+
+  <label>Name</label>
+  <div class="value">Blackveil DNS</div>
+
+  <label>Description</label>
+  <div class="value">DNS &amp; email security scanner &mdash; 51 tools for SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more. Passive, read-only checks powered by Cloudflare DNS-over-HTTPS.</div>
+
+  <label>Icon</label>
+  <p style="font-size: 0.9rem; margin-top: 0.25rem">Upload <code>assets/icon.png</code> from bv-claude-dns (512&times;512 PNG, 23 KB)</p>
+
+  <label>Privacy Policy</label>
+  <div class="value">https://www.blackveilsecurity.com/privacy</div>
+
+  <label>Repository</label>
+  <div class="value">https://github.com/MadaBurns/bv-claude-dns</div>
+
+  <label>License</label>
+  <div class="value">BUSL-1.1 (converts to Apache 2.0 four years after publication)</div>
+
+  <label>Version</label>
+  <div class="value">2.9.1</div>
+
+  <label>Tool Count</label>
+  <div class="value">51</div>
+</div>
+
+<hr class="divider">
+
+<div class="card card-warn">
+  <strong>Note:</strong> The <code>privacy_policy</code> field was removed from <code>manifest.json</code> because <code>@anthropic-ai/mcpb</code> v2.1.2 does not support it yet. The privacy policy URL is referenced in the README Legal section and provided in both submission forms above. Re-add the field to <code>manifest.json</code> when a newer mcpb version ships support.
+</div>
+
+<hr class="divider">
+
+<h2 style="color: var(--text)">Master Checklist</h2>
+<div class="card">
+  <ul class="checklist">
+    <li><input type="checkbox"> GitHub Release v2.9.1 published with .mcpb + SHA256SUMS</li>
+    <li><input type="checkbox"> MCP Registry account created</li>
+    <li><input type="checkbox"> DNS TXT record <code>_mcp-verify.blackveilsecurity.com</code> added</li>
+    <li><input type="checkbox"> Domain verification completed</li>
+    <li><input type="checkbox"> <code>npx mcp-publisher publish</code> run locally</li>
+    <li><input type="checkbox"> <code>MCP_REGISTRY_TOKEN</code> secret added to bv-mcp GitHub</li>
+    <li><input type="checkbox"> Remote connector form submitted</li>
+    <li><input type="checkbox"> Desktop extension form submitted</li>
+    <li><input type="checkbox"> Anthropic review approved (wait for email)</li>
+  </ul>
+</div>
+
+<div class="footer">
+  BLACKVEIL Security &mdash; blackveilsecurity.com<br>
+  Escalation: integrations@anthropic.com
+</div>
+
+</body>
+</html>
