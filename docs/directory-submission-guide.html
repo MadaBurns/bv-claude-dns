@@ -210,7 +210,7 @@
 <p class="subtitle">Claude Directory &amp; MCP Registry Submission Guide &mdash; v2.9.1 &mdash; 2026-04-21</p>
 
 <div class="card card-info">
-  <strong>Implementation status:</strong> All code changes are pushed and tested. The <code>v2.9.1</code> tag is live and GitHub Actions is building the <code>.mcpb</code> release. The steps below are manual actions that cannot be automated.
+  <strong>Implementation status:</strong> All code changes are pushed and tested. The <code>v2.9.1</code> tag is live, the <code>.mcpb</code> GitHub Release is published, and the MCP Registry listing is live as <code>com.blackveilsecurity/dns</code> (Streamable HTTP remote + npm stdio packages). Upstream bv-mcp is at v2.9.2 on npm. The remaining steps below are the Claude Directory submissions (manual forms).
 </div>
 
 <table>
@@ -218,8 +218,9 @@
   <tr><td>bv-claude-dns code</td><td class="status-done">DONE</td><td>51 tools, drift tests, CHANGELOG, README</td></tr>
   <tr><td>bv-mcp code</td><td class="status-done">DONE</td><td>Tool count guard, CI auto-publish, privacy link</td></tr>
   <tr><td>v2.9.1 tag pushed</td><td class="status-done">DONE</td><td>GitHub Actions building .mcpb</td></tr>
-  <tr><td>GitHub Release</td><td class="status-pending">VERIFY</td><td>Check Actions completed</td></tr>
-  <tr><td>MCP Registry</td><td class="status-manual">MANUAL</td><td>Steps 1-3 below</td></tr>
+  <tr><td>GitHub Release</td><td class="status-done">DONE</td><td>v2.9.1 .mcpb + SHA256SUMS published</td></tr>
+  <tr><td>MCP Registry</td><td class="status-done">DONE</td><td>Listed as <code>com.blackveilsecurity/dns</code> (remote + npm packages)</td></tr>
+  <tr><td>bv-mcp npm</td><td class="status-done">DONE</td><td>v2.9.2 published to npm</td></tr>
   <tr><td>Claude Directory</td><td class="status-manual">MANUAL</td><td>Steps 4-5 below</td></tr>
 </table>
 
@@ -359,7 +360,7 @@
 <hr class="divider">
 
 <div class="card card-warn">
-  <strong>Note:</strong> The <code>privacy_policy</code> field was removed from <code>manifest.json</code> because <code>@anthropic-ai/mcpb</code> v2.1.2 does not support it yet. The privacy policy URL is referenced in the README Legal section and provided in both submission forms above. Re-add the field to <code>manifest.json</code> when a newer mcpb version ships support.
+  <strong>Note:</strong> The <code>privacy_policy</code> field was removed from <code>manifest.json</code> because <code>@anthropic-ai/mcpb</code> v2.1.2 does not support it yet (mcpb validator rejects unknown fields). The MCP Registry listing succeeded without it. The privacy policy URL is referenced in the README Legal section and provided in both Claude Directory submission forms above. Re-add the field to <code>manifest.json</code> when a newer mcpb version ships support.
 </div>
 
 <hr class="divider">
@@ -367,12 +368,12 @@
 <h2 style="color: var(--text)">Master Checklist</h2>
 <div class="card">
   <ul class="checklist">
-    <li><input type="checkbox"> GitHub Release v2.9.1 published with .mcpb + SHA256SUMS</li>
-    <li><input type="checkbox"> MCP Registry account created</li>
-    <li><input type="checkbox"> DNS TXT record <code>_mcp-verify.blackveilsecurity.com</code> added</li>
-    <li><input type="checkbox"> Domain verification completed</li>
-    <li><input type="checkbox"> <code>npx mcp-publisher publish</code> run locally</li>
-    <li><input type="checkbox"> <code>MCP_REGISTRY_TOKEN</code> secret added to bv-mcp GitHub</li>
+    <li><input type="checkbox" checked disabled> GitHub Release v2.9.1 published with .mcpb + SHA256SUMS</li>
+    <li><input type="checkbox" checked disabled> MCP Registry account created</li>
+    <li><input type="checkbox" checked disabled> DNS TXT record <code>_mcp-verify.blackveilsecurity.com</code> added</li>
+    <li><input type="checkbox" checked disabled> Domain verification completed</li>
+    <li><input type="checkbox" checked disabled> <code>npx mcp-publisher publish</code> run locally</li>
+    <li><input type="checkbox" checked disabled> <code>MCP_REGISTRY_TOKEN</code> secret added to bv-mcp GitHub</li>
     <li><input type="checkbox"> Remote connector form submitted</li>
     <li><input type="checkbox"> Desktop extension form submitted</li>
     <li><input type="checkbox"> Anthropic review approved (wait for email)</li>

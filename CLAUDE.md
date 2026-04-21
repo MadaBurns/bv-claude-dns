@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Blackveil DNS Security Scanner — a Claude Desktop Extension (MCP) that proxies JSON-RPC requests over stdio to a remote hosted worker at `https://dns-mcp.blackveilsecurity.com/mcp`. The extension exposes 33 DNS/email security tools (SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, etc.) to Claude Desktop.
+Blackveil DNS Security Scanner — a Claude Desktop Extension (MCP) that proxies JSON-RPC requests over stdio to a remote hosted worker at `https://dns-mcp.blackveilsecurity.com/mcp`. The extension exposes 51 DNS/email security tools (SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, subdomain discovery, supply-chain mapping, compliance, drift analysis, and more) to Claude Desktop. Listed on the MCP Registry as `com.blackveilsecurity/dns`.
 
 License: BUSL-1.1 (converts to Apache 2.0 after 4 years).
 
