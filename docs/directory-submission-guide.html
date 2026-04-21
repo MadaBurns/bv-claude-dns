@@ -316,11 +316,21 @@
   <label>Documentation</label>
   <div class="value">https://github.com/MadaBurns/bv-mcp</div>
 
+  <label>Support Channel</label>
+  <div class="value">https://github.com/MadaBurns/bv-mcp/issues</div>
+
   <label>Transport</label>
   <div class="value">Streamable HTTP (POST/GET/DELETE /mcp) + Legacy SSE fallback</div>
 
   <label>Tool Annotations</label>
   <p style="font-size: 0.9rem; margin-top: 0.25rem">All 51 tools annotated: <code>readOnlyHint: true</code>, <code>destructiveHint: false</code>, <code>idempotentHint: true</code>, <code>openWorldHint: true</code></p>
+
+  <label>Example Prompts (&sect;3.E)</label>
+  <div class="value">Scan blackveilsecurity.com and tell me what needs fixing</div>
+  <div class="value">Compare the email security of google.com and microsoft.com</div>
+  <div class="value">Generate a DMARC record for example.com with reject policy</div>
+  <div class="value">What attack paths exist for example.com?</div>
+  <div class="value">Map example.com's compliance against NIST 800-177</div>
 </div>
 
 <!-- STEP 5 -->
@@ -355,6 +365,16 @@
 
   <label>Tool Count</label>
   <div class="value">51</div>
+
+  <label>Support Channel</label>
+  <div class="value">https://github.com/MadaBurns/bv-claude-dns/issues</div>
+
+  <label>Example Prompts (&sect;3.E)</label>
+  <div class="value">Scan blackveilsecurity.com and tell me what needs fixing</div>
+  <div class="value">Compare the email security of google.com and microsoft.com</div>
+  <div class="value">Generate a DMARC record for example.com with reject policy</div>
+  <div class="value">What attack paths exist for example.com?</div>
+  <div class="value">Map example.com's compliance against NIST 800-177</div>
 </div>
 
 <hr class="divider">
@@ -374,6 +394,9 @@
     <li><input type="checkbox" checked disabled> Domain verification completed</li>
     <li><input type="checkbox" checked disabled> <code>npx mcp-publisher publish</code> run locally</li>
     <li><input type="checkbox" checked disabled> <code>MCP_REGISTRY_TOKEN</code> secret added to bv-mcp GitHub</li>
+    <li><input type="checkbox" checked disabled> Example prompts documented in READMEs and submission forms</li>
+    <li><input type="checkbox" checked disabled> Support channel documented in READMEs and submission forms</li>
+    <li><input type="checkbox" checked disabled> Dependencies updated (npm audit fix + Dependabot merges)</li>
     <li><input type="checkbox"> Remote connector form submitted</li>
     <li><input type="checkbox"> Desktop extension form submitted</li>
     <li><input type="checkbox"> Anthropic review approved (wait for email)</li>
