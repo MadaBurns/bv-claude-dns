@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Dev dependencies** — `@types/node` 25.3.0 → 25.6.0, `tsup` 8.5.0 → 8.5.1, `vitest` 4.1.2 → 4.1.5 (#15)
+- **Transitive bumps** — `hono` 4.12.14 → 4.12.18 via MCP SDK (#16), `fast-uri` 3.1.0 → 3.1.2 via ajv (#17)
+- **CI workflows now run on Node 24** — `actions/checkout` v4 → v6 (#4), `actions/upload-artifact` v4 → v7 (#3), `softprops/action-gh-release` v2 → v3 (#10)
+
 ## [2.9.1] - 2026-04-21
 
 ### Added
