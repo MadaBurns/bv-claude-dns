@@ -1,25 +1,46 @@
-# Source code
+# What ships in the .mcpb: dist/, manifest.json, package.json, assets/,
+# README.md, LICENSE, CHANGELOG.md. Everything below is excluded.
+#
+# This is an explicit denylist (a blanket `*` + re-includes does NOT work
+# reliably with mcpb's directory handling — it drops dist/ and assets/). The
+# pack-time guard scripts/check-bundle.mjs is the hard enforcement: it fails
+# the pack if any dev cruft below slips into the bundle anyway. (Issue #29.)
+
+# --- Source & build tooling ---
 src/
+scripts/
+test/
 node_modules/
 *.ts
-!dist/**
-
-# Config
-CLAUDE.md
+*.map
 tsconfig.json
 tsup.config.ts
+vitest.config.ts
+
+# --- Dev cruft that has shipped before (issue #29) ---
+.wrangler/
+.githooks/
+docs/
+.dev.vars
+.dev.vars.example
+*.env*
+.gitleaks.toml
+*.sqlite
+*.db
+
+# --- VCS, CI, agent config, metadata ---
 .git/
 .github/
 .gitignore
+.mcpbignore
+.cursorrules
+.nvmrc
+CLAUDE.md
+GEMINI.md
+MCP.md
+package-lock.json
+SHA256SUMS.txt
 
-# Secrets
-.dev.vars
-*.env*
-
-# OS / editor
+# --- OS / editor / logs ---
 .DS_Store
 *.log
-*.map
-
-# Lock files
-package-lock.json

@@ -1,6 +1,6 @@
 # Blackveil DNS Security Scanner
 
-A Claude Desktop Extension (MCP) that brings 51 DNS and email security tools directly into Claude — SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more.
+A Claude Desktop Extension (MCP) that brings 79 DNS and email security tools directly into Claude — SPF, DMARC, DKIM, DNSSEC, SSL, CAA, MTA-STS, and more.
 
 ![Blackveil DNS](assets/icon.png)
 
@@ -15,6 +15,8 @@ Download the latest `.mcpb` file from [GitHub Releases](https://github.com/MadaB
 | `API Key` | No | Your Blackveil API key. Get one at [blackveilsecurity.com](https://blackveilsecurity.com) |
 
 ## Tools
+
+The proxy serves the upstream tool catalog **live** at startup, so the exact set always matches the hosted server (currently 79 tools). The table below is a curated highlight — it is not the source of truth.
 
 | Tool | Description |
 |------|-------------|
@@ -60,12 +62,7 @@ Download the latest `.mcpb` file from [GitHub Releases](https://github.com/MadaB
 | `discover_subdomains` | Find subdomains via Certificate Transparency logs |
 | `map_compliance` | Map findings to NIST, PCI DSS, SOC 2, CIS Controls |
 | `simulate_attack_paths` | Enumerate attack paths with severity and mitigations |
-| `generate_fix_plan` | Generate a prioritized remediation plan |
-| `generate_spf_record` | Generate a recommended SPF record |
-| `generate_dmarc_record` | Generate a recommended DMARC record |
-| `generate_dkim_config` | Generate DKIM configuration guidance |
-| `generate_mta_sts_policy` | Generate an MTA-STS policy |
-| `generate_rollout_plan` | Generate a phased DMARC enforcement timeline |
+| `generate` | Generate a remediation artifact — fix plan, SPF/DMARC record, DKIM config, MTA-STS policy, or DMARC rollout plan (select via `artifact`) |
 | `validate_fix` | Re-check a control after applying a fix |
 | `get_benchmark` | Get industry benchmark data |
 | `get_provider_insights` | Get provider-specific security insights |
