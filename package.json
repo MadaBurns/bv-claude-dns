@@ -22,8 +22,9 @@
 		"dev": "node dist/server.js",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
+		"sync:tools": "node scripts/sync-tools.mjs",
 		"mcpb:validate": "mcpb validate",
-		"mcpb:pack": "node scripts/sync-manifest-version.mjs && npm run build && mcpb pack",
+		"mcpb:pack": "node scripts/sync-tools.mjs --allow-offline && node scripts/sync-manifest-version.mjs && npm run build && mcpb pack && node scripts/check-bundle.mjs",
 		"mcpb:clean": "mcpb clean"
 	},
 	"dependencies": {

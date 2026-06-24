@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Fixed
+- **Free tier no longer breaks when `BV_API_KEY` is unset** (#28) — the proxy now attaches `Authorization: Bearer …` only for a non-empty key. `undefined`, `""`, whitespace-only, and unresolved MCPB placeholders are all treated identically → no auth header (free tier). The auth decision is centralized in a single `authHeaders()` helper (`src/auth.ts`) instead of duplicated inline guards, with unit coverage in `test/auth.test.ts`.
+
+### Changed
+- **Tool catalog is now fetched live at startup** (#27) — the proxy serves the upstream `tools/list` verbatim (79 tools) instead of a hand-maintained static array, so it can never advertise a tool the backend can't serve. A bundled `src/fallback-tools.ts` (auto-generated from the live endpoint) is used only when the upstream is unreachable. Removes the 6 dead `generate_*` tools (consolidated upstream into `generate`) and adds ~28 newer tools. `manifest.json` `tools[]` + description count and the README count are regenerated from the same source via `scripts/sync-tools.mjs` (run from `mcpb:pack`).
+- **`.mcpb` bundle tightened** (#29) — `.mcpbignore` now excludes `.wrangler/` (miniflare KV state / `*.sqlite`), `.githooks/`, `.gitleaks.toml`, `.dev.vars*`, and `docs/`. The bundle ships only `dist/`, `manifest.json`, `package.json`, `assets/`, `README.md`, `LICENSE`, `CHANGELOG.md`. A pack-time guard (`scripts/check-bundle.mjs`) fails the pack if any dev cruft slips into the archive.
+
 ### Changed
 - **Dev dependencies** — `@types/node` 25.3.0 → 25.6.0, `tsup` 8.5.0 → 8.5.1, `vitest` 4.1.2 → 4.1.5 (#15)
 - **Transitive bumps** — `hono` 4.12.14 → 4.12.18 via MCP SDK (#16), `fast-uri` 3.1.0 → 3.1.2 via ajv (#17)

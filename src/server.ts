@@ -4,29 +4,25 @@
 // Uses the MCP SDK (McpServer + StdioServerTransport) so Claude Desktop
 // recognises it as a proper MCP server. Tool calls are proxied to the
 // remote hosted Worker via HTTPS.
+//
+// Tool catalog is fetched LIVE from the upstream `tools/list` at startup, so
+// the proxy can never advertise a tool the backend can't serve. A baked-in
+// fallback (FALLBACK_TOOLS) is used only when the upstream is unreachable.
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { request as httpsRequest } from 'node:https';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { FALLBACK_TOOLS } from './fallback-tools.js';
+import { resolveApiKey, authHeaders } from './auth.js';
 
 const PROXY_VERSION = '2.9.1';
 const MCP_URL = 'https://dns-mcp.blackveilsecurity.com/mcp';
 const USER_AGENT = `bv-claude-dns-proxy/${PROXY_VERSION}`;
-// Ignore unresolved MCPB placeholder, encrypted blobs, or empty values
-const rawKey = process.env.BV_API_KEY ?? '';
-let API_KEY = (rawKey.startsWith('${') || rawKey.startsWith('__encrypted__')) ? '' : rawKey;
 
-if (!API_KEY) {
-	try {
-		API_KEY = readFileSync(join(homedir(), '.bv-dns', 'api-key'), 'utf-8').trim();
-	} catch {
-		// No local key file — continue unauthenticated (free tier)
-	}
-}
+// Resolve once at startup. Empty string ⇒ free tier (no Authorization header).
+const API_KEY = resolveApiKey();
+
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024; // 2 MB
 const REQUEST_TIMEOUT_MS = 30_000; // 30 seconds
 
@@ -41,8 +37,8 @@ function remoteCall(method: string, params: Record<string, unknown>): Promise<{ 
 			'Content-Type': 'application/json',
 			Accept: 'application/json',
 			'User-Agent': USER_AGENT,
+			...authHeaders(API_KEY),
 		};
-		if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
 		if (remoteSessionId) headers['Mcp-Session-Id'] = remoteSessionId;
 
 		const req = httpsRequest(MCP_URL, { method: 'POST', headers, timeout: REQUEST_TIMEOUT_MS }, (res) => {
@@ -83,8 +79,7 @@ async function ensureRemoteInit(): Promise<void> {
 	// Send initialized notification
 	await new Promise<void>((resolve, reject) => {
 		const body = JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' });
-		const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-		if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
+		const headers: Record<string, string> = { 'Content-Type': 'application/json', ...authHeaders(API_KEY) };
 		if (remoteSessionId) headers['Mcp-Session-Id'] = remoteSessionId;
 		const req = httpsRequest(MCP_URL, { method: 'POST', headers, timeout: REQUEST_TIMEOUT_MS }, (res) => {
 			res.resume();
@@ -113,69 +108,105 @@ async function callRemoteTool(name: string, args: Record<string, unknown>) {
 }
 
 // ---------------------------------------------------------------------------
-// Static tool definitions — registered immediately so Claude Desktop can
-// connect and list tools without waiting for any remote calls.
+// JSON Schema → Zod shape converter
+//
+// The upstream `tools/list` returns a full JSON Schema per tool. We convert
+// the top-level `properties` into a Zod raw shape so Claude Desktop sees the
+// real argument hints. Anything we can't model precisely degrades to a
+// permissive type — the upstream Worker is the authoritative validator, so the
+// proxy's local schema only drives the UI, never security.
 // ---------------------------------------------------------------------------
 
-const DOMAIN_PARAM = { domain: z.string().describe('Domain to check (e.g., example.com)') };
-const DOMAIN_OPTIONAL = { ...DOMAIN_PARAM, format: z.enum(['full', 'compact']).optional().describe('Output format') };
+interface JsonSchema {
+	type?: string | string[];
+	description?: string;
+	enum?: unknown[];
+	items?: JsonSchema;
+	properties?: Record<string, JsonSchema>;
+	required?: string[];
+	[k: string]: unknown;
+}
 
-const TOOLS: Array<{ name: string; description: string; params: Record<string, z.ZodTypeAny> }> = [
-	{ name: 'scan_domain', description: 'Full DNS and email security audit. Score, grade, maturity, findings. Start here.', params: { ...DOMAIN_PARAM, profile: z.enum(['auto', 'mail_enabled', 'enterprise_mail', 'non_mail', 'web_only', 'minimal']).optional(), force_refresh: z.boolean().optional(), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'check_spf', description: 'Validate SPF syntax, policy, and trust surface.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_dmarc', description: 'Validate DMARC policy, alignment, and reporting.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_dkim', description: 'Probe DKIM selectors and validate key strength.', params: { ...DOMAIN_OPTIONAL, selector: z.string().optional().describe('DKIM selector. Omit to probe common ones.') } },
-	{ name: 'check_mx', description: 'Validate MX records and email provider detection.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_dnssec', description: 'Verify DNSSEC validation and DNSKEY/DS records.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_ssl', description: 'Verify SSL/TLS certificate and HTTPS config.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_mta_sts', description: 'Validate MTA-STS SMTP encryption policy.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_ns', description: 'Analyze NS delegation and provider diversity.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_caa', description: 'Check authorized Certificate Authorities via CAA.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_bimi', description: 'Validate BIMI record and VMC evidence.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_tlsrpt', description: 'Validate TLS-RPT SMTP failure reporting.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_http_security', description: 'Audit HTTP security headers (CSP, COOP, etc.).', params: DOMAIN_OPTIONAL },
-	{ name: 'check_dane', description: 'Verify DANE/TLSA certificate pinning.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_dane_https', description: 'Verify DANE certificate pinning for HTTPS.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_svcb_https', description: 'Validate HTTPS/SVCB records (RFC 9460).', params: DOMAIN_OPTIONAL },
-	{ name: 'check_lookalikes', description: 'Detect active typosquat/lookalike domains.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_shadow_domains', description: 'Detect shadow/subdomain takeover risks.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_txt_hygiene', description: 'Audit TXT record hygiene and accumulation.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_mx_reputation', description: 'Check MX server IP reputation via DNSBLs.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_srv', description: 'Discover SRV records for common services.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_zone_hygiene', description: 'Audit DNS zone configuration hygiene.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_resolver_consistency', description: 'Compare DNS responses across resolvers.', params: { ...DOMAIN_OPTIONAL, record_type: z.string().optional() } },
-	{ name: 'assess_spoofability', description: 'Assess email spoofing risk for a domain.', params: DOMAIN_OPTIONAL },
-	{ name: 'compare_baseline', description: 'Compare domain security against a policy baseline.', params: { domain: z.string(), format: z.enum(['full', 'compact']).optional(), baseline: z.object({ grade: z.string().optional(), score: z.number().optional(), require_dmarc_enforce: z.boolean().optional(), require_spf: z.boolean().optional(), require_dkim: z.boolean().optional(), require_dnssec: z.boolean().optional(), require_mta_sts: z.boolean().optional(), require_caa: z.boolean().optional(), max_critical_findings: z.number().optional(), max_high_findings: z.number().optional() }).passthrough().describe('Policy baseline requirements.') } },
-	{ name: 'generate_fix_plan', description: 'Generate a prioritised remediation plan from scan results.', params: DOMAIN_OPTIONAL },
-	{ name: 'generate_spf_record', description: 'Generate an SPF record for a domain.', params: { domain: z.string(), include_providers: z.array(z.string()).max(15).optional().describe('Providers to include (e.g., ["google"]).'), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'generate_dmarc_record', description: 'Generate a DMARC record for a domain.', params: { domain: z.string(), policy: z.enum(['none', 'quarantine', 'reject']).optional().describe('Policy (default "reject").'), rua_email: z.string().max(254).optional().describe('Report email. Default: dmarc-reports@{domain}.'), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'generate_dkim_config', description: 'Generate DKIM configuration guidance.', params: { domain: z.string(), provider: z.string().max(100).optional().describe('Provider (e.g., "google"). Omit for generic.'), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'generate_mta_sts_policy', description: 'Generate an MTA-STS policy for a domain.', params: { domain: z.string(), mx_hosts: z.array(z.string()).max(20).optional().describe('MX hosts. Omit to detect from DNS.'), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'get_benchmark', description: 'Get score benchmarks: percentiles, mean, top failures.', params: { profile: z.enum(['mail_enabled', 'enterprise_mail', 'non_mail', 'web_only', 'minimal']).optional().describe('Profile to benchmark (default "mail_enabled").'), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'get_provider_insights', description: 'Get provider cohort benchmarks and common issues.', params: { provider: z.string().min(1).describe('Provider (e.g., "google workspace").'), profile: z.enum(['mail_enabled', 'enterprise_mail', 'non_mail', 'web_only', 'minimal']).optional(), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'explain_finding', description: 'Explain a specific security finding in detail.', params: { checkType: z.string().min(1).max(100).describe("Check type (e.g., 'SPF', 'DMARC')."), status: z.enum(['critical', 'high', 'medium', 'low', 'info', 'passed']).describe('Finding severity or status.'), details: z.string().max(2000).optional().describe('Additional detail from check result.'), format: z.enum(['full', 'compact']).optional() } },
-	{ name: 'check_subdomailing', description: 'Detect SubdoMailing risk by analyzing SPF include chain for takeover-vulnerable domains.', params: DOMAIN_OPTIONAL },
-	{ name: 'batch_scan', description: 'Scan up to 10 domains at once. Returns score, grade, and finding counts per domain.', params: { domains: z.array(z.string()).min(1).max(10).describe('Domains to scan (max 10)'), force_refresh: z.boolean().optional().describe('Bypass cache and run fresh scans.'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
-	{ name: 'compare_domains', description: 'Side-by-side security comparison of 2-5 domains. Shows scores, category gaps, and unique weaknesses.', params: { domains: z.array(z.string()).min(2).max(5).describe('Domains to compare (2-5)'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
-	{ name: 'map_supply_chain', description: 'Map third-party service dependencies from DNS records.', params: DOMAIN_OPTIONAL },
-	{ name: 'analyze_drift', description: 'Compare current security posture against a previous baseline.', params: { domain: z.string().describe('Domain to analyze drift for'), baseline: z.string().min(1).max(50_000).describe('Previous ScanScore JSON or "cached"'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
-	{ name: 'validate_fix', description: 'Re-check a specific control after applying a fix.', params: { domain: z.string().describe('Domain to validate the fix for'), check: z.string().describe('Check name to re-run (e.g., "dmarc", "spf")'), expected: z.string().max(1000).optional().describe('Expected DNS record value to verify against'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
-	{ name: 'generate_rollout_plan', description: 'Generate a phased DMARC enforcement timeline with exact DNS records per phase.', params: { domain: z.string().describe('Domain to generate rollout plan for'), target_policy: z.enum(['quarantine', 'reject']).optional().describe('Target DMARC policy (default: reject)'), timeline: z.enum(['aggressive', 'standard', 'conservative']).optional().describe('Rollout speed (default: standard)'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
-	{ name: 'resolve_spf_chain', description: 'Trace the full SPF include chain. Shows lookup count, tree depth, and circular includes.', params: DOMAIN_OPTIONAL },
-	{ name: 'discover_subdomains', description: 'Find subdomains via Certificate Transparency logs.', params: DOMAIN_OPTIONAL },
-	{ name: 'map_compliance', description: 'Map findings to NIST 800-177, PCI DSS 4.0, SOC 2, CIS Controls.', params: DOMAIN_OPTIONAL },
-	{ name: 'simulate_attack_paths', description: 'Enumerate attack paths with severity, feasibility, steps, and mitigations.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_dbl', description: 'Check domain reputation against DNS-based Domain Block Lists.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_rbl', description: 'Check MX server IP reputation against Real-time Blocklists.', params: DOMAIN_OPTIONAL },
-	{ name: 'cymru_asn', description: 'Map domain IPs to ASNs via Team Cymru DNS.', params: DOMAIN_OPTIONAL },
-	{ name: 'rdap_lookup', description: 'Fetch domain registration data via RDAP (modern WHOIS).', params: DOMAIN_OPTIONAL },
-	{ name: 'check_nsec_walkability', description: 'Assess DNSSEC zone walkability risk via NSEC3PARAM analysis.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_dnssec_chain', description: 'Walk the DNSSEC chain of trust from root to target domain.', params: DOMAIN_OPTIONAL },
-	{ name: 'check_fast_flux', description: 'Detect fast-flux DNS behavior via multi-round A/AAAA queries.', params: { domain: z.string().describe('Domain to check (e.g., example.com)'), rounds: z.number().int().min(3).max(5).optional().describe('Number of query rounds (3-5, default 3)'), format: z.enum(['full', 'compact']).optional().describe('Output format') } },
-];
+function jsonSchemaToZod(schema: JsonSchema): z.ZodTypeAny {
+	const types = Array.isArray(schema.type) ? schema.type : schema.type ? [schema.type] : [];
+
+	if (Array.isArray(schema.enum) && schema.enum.length > 0) {
+		const strings = schema.enum.filter((v): v is string => typeof v === 'string');
+		if (strings.length === schema.enum.length && strings.length > 0) {
+			return z.enum(strings as [string, ...string[]]);
+		}
+	}
+
+	if (types.includes('string')) return z.string();
+	if (types.includes('number') || types.includes('integer')) return z.number();
+	if (types.includes('boolean')) return z.boolean();
+	if (types.includes('array')) {
+		const item = schema.items ? jsonSchemaToZod(schema.items) : z.unknown();
+		return z.array(item);
+	}
+	if (types.includes('object')) {
+		if (schema.properties) {
+			return objectShapeToZod(schema).strict().passthrough();
+		}
+		return z.record(z.string(), z.unknown());
+	}
+	return z.unknown();
+}
+
+function objectShapeToZod(schema: JsonSchema): z.ZodObject<Record<string, z.ZodTypeAny>> {
+	const required = new Set(schema.required ?? []);
+	const shape: Record<string, z.ZodTypeAny> = {};
+	for (const [key, propSchema] of Object.entries(schema.properties ?? {})) {
+		let zodType = jsonSchemaToZod(propSchema);
+		if (propSchema.description) zodType = zodType.describe(propSchema.description);
+		if (!required.has(key)) zodType = zodType.optional();
+		shape[key] = zodType;
+	}
+	return z.object(shape);
+}
+
+/** Build the Zod raw shape (param map) for `server.tool()` from a tool's inputSchema. */
+function toolParamShape(inputSchema: JsonSchema | undefined): Record<string, z.ZodTypeAny> {
+	if (!inputSchema || !inputSchema.properties) return {};
+	const required = new Set(inputSchema.required ?? []);
+	const shape: Record<string, z.ZodTypeAny> = {};
+	for (const [key, propSchema] of Object.entries(inputSchema.properties)) {
+		let zodType = jsonSchemaToZod(propSchema);
+		if (propSchema.description) zodType = zodType.describe(propSchema.description);
+		if (!required.has(key)) zodType = zodType.optional();
+		shape[key] = zodType;
+	}
+	return shape;
+}
+
+interface RemoteToolDef {
+	name: string;
+	description?: string;
+	inputSchema?: JsonSchema;
+}
+
+/**
+ * Fetch the live tool catalog from the upstream `tools/list`. Returns the
+ * baked-in fallback set if the upstream is unreachable / malformed, so the
+ * proxy still starts and serves a usable (if possibly slightly stale) catalog.
+ */
+async function fetchToolCatalog(): Promise<{ tools: RemoteToolDef[]; live: boolean }> {
+	try {
+		await ensureRemoteInit();
+		const resp = await remoteCall('tools/list', {});
+		const result = resp.result as { tools?: RemoteToolDef[] } | undefined;
+		if (resp.error || !result?.tools || result.tools.length === 0) {
+			throw new Error('empty or errored tools/list');
+		}
+		return { tools: result.tools, live: true };
+	} catch (err) {
+		console.error(`[bv-proxy] Could not fetch live tool catalog (${(err as Error).message}); using bundled fallback.`);
+		return { tools: FALLBACK_TOOLS as RemoteToolDef[], live: false };
+	}
+}
 
 // ---------------------------------------------------------------------------
-// Main — register tools and connect immediately.
+// Main — fetch the live catalog, register tools, connect.
 // ---------------------------------------------------------------------------
 
 const server = new McpServer({
@@ -183,12 +214,17 @@ const server = new McpServer({
 	version: PROXY_VERSION,
 });
 
-for (const tool of TOOLS) {
-	server.tool(tool.name, tool.description, tool.params, async (args) => {
-		return callRemoteTool(tool.name, args as Record<string, unknown>);
-	});
+const { tools, live } = await fetchToolCatalog();
+
+for (const tool of tools) {
+	server.tool(
+		tool.name,
+		tool.description ?? '',
+		toolParamShape(tool.inputSchema),
+		async (args) => callRemoteTool(tool.name, args as Record<string, unknown>),
+	);
 }
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error(`[bv-proxy] Ready — ${TOOLS.length} tools, proxying to ${MCP_URL}`);
+console.error(`[bv-proxy] Ready — ${tools.length} tools (${live ? 'live' : 'fallback'}), proxying to ${MCP_URL}`);
