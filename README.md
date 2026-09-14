@@ -84,6 +84,7 @@ Try these with the Blackveil DNS extension enabled in Claude Desktop:
 - **Bug reports & feature requests:** [GitHub Issues](https://github.com/MadaBurns/bv-claude-dns/issues)
 - **Security vulnerabilities:** [security@blackveilsecurity.com](mailto:security@blackveilsecurity.com)
 - **Upstream MCP server:** [MadaBurns/bv-mcp](https://github.com/MadaBurns/bv-mcp/issues)
+- **Support the project:** [Ko-fi](https://ko-fi.com/madaburns)
 
 ## Development
 
